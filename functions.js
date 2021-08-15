@@ -1,9 +1,13 @@
+
+//Necessary require methods for both inquirer and SQL queries
 const db = require('./connection')
 const inquirer = require('inquirer');
 
-let departmentName = [];
+//Class constructor that will be exported, contains all the necessary functions
 
 class Options {
+
+    //Constructor function containing the existing seed data 
     constructor (db) {
         this.db = db
 
@@ -32,9 +36,12 @@ class Options {
 
 
     }
+
+//Function that returns all the department names from SQL
    
 departmentQuery = () => {
 
+        //Returns the console table of the SQL query
 
        return db.promise().query(`SELECT * FROM department;`)
             .then( ([rows,fields]) => {
@@ -47,9 +54,14 @@ departmentQuery = () => {
     
 }
 
+
+//Function that returns all the roles, salary and department names from SQL
+
 rolesQuery = () => {
 
-    return db.promise().query(`SELECT roles.id, roles.title, roles.salary, department.  department_name AS department
+    //Returns the console table of the SQL query
+
+    return db.promise().query(`SELECT roles.id, roles.title, roles.salary, department_name AS department
         FROM roles
         JOIN department ON department.id = roles.department_id;`)
             .then( ([rows,fields]) => {
@@ -62,7 +74,11 @@ rolesQuery = () => {
 
 }
 
+//Function that returns all the employees, their roles, salaries, departmentd, and managers (if any) from SQL
+
 employeesQuery = () => {
+
+         //Returns the console table of the SQL query
 
         return db.promise().query(`SELECT 
                             employee.first_name,  
@@ -86,15 +102,19 @@ employeesQuery = () => {
 
 }
 
+//Function that adds a department name to the SQL database based on user input
 
 addDepartmentQuery = () => {
+
+    //Required inquirer prompt
 
  return  inquirer.prompt([{
                         type: "text",
                         name: 'departmentName',
                         message: "What Would You Like to name this Department?"
+            //destructure the name/answer to be used in the SQL Query
                     }]).then(({departmentName}) => {
-
+                    this.departmentName.push(departmentName)
 
      db.promise().query(`INSERT INTO department (department_name)
                               VALUES (?);`, departmentName,)
@@ -108,6 +128,8 @@ addDepartmentQuery = () => {
             })
 }
 
+
+//Function that adds a role name/salary/department to the SQL database based on user input
 
 addRoleQuery = () => {
             //    let i = 0;
@@ -140,7 +162,7 @@ return  inquirer.prompt([
 
                     }
 
-
+                //destructure the answers to be used in the SQL Query
                 ]).then(({roleName, roleSalary, roleDepartment}) => {
 
                     this.roleName.push(roleName)
@@ -152,7 +174,7 @@ return  inquirer.prompt([
                         this.departmentName.indexOf(roleDepartment) + 1
                     ])
             .then( ([rows,fields]) => {
-             console.log(`${departmentName} 'Added Sucessfully!'`);
+             console.log(`${roleName} 'Added Sucessfully!'`);
                 })
                 .catch(console.log)
                 .then( () => {
@@ -161,7 +183,7 @@ return  inquirer.prompt([
             })
 }
 
-
+//Function that adds an employee name/role/manager to the SQL database based on user input
 
 addEmployeeQuery = () => {
 
@@ -173,7 +195,7 @@ addEmployeeQuery = () => {
                     }, {
                         type: "text",
                         name: 'employeeLastName',
-                        message: "What's the new employee's First Name?"
+                        message: "What's the new employee's Last Name?"
 
                     }, {
                         type: "list",
@@ -189,10 +211,15 @@ addEmployeeQuery = () => {
 
                     }
 
-
+            //destructure the answers to be used in the SQL Query
                 ]).then(({employeeFirstName, employeeLastName, employeeRole, employeeManager}) => {
 
-                    if (employeeManager = 'None') {
+                    //Set a special case in case no manager is selected for the employee
+                    if (employeeManager === 'None') {
+
+                       let employeeFullName = `${employeeFirstName + ' ' + employeeLastName}`
+
+                        this.employeeNames.push(employeeFullName)
 
                         db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)  
                               VALUES (?, ?, ?, ?);`, [
@@ -210,7 +237,7 @@ addEmployeeQuery = () => {
 
                     } else {
 
-                        let employeeFullName = `${employeeFirstName}  ${employeeLastName} `
+                       let employeeFullName = `${employeeFirstName + ' ' + employeeLastName}`
 
                         this.employeeNames.push(employeeFullName)
 
@@ -232,8 +259,8 @@ addEmployeeQuery = () => {
 
 }
 
-
-    updateEmployeeQuery = () => {
+//Function that updates an employee's role and passes it to the SQL database based on user input
+updateEmployeeQuery = () => {
 
         return  inquirer.prompt([
                     {
@@ -250,13 +277,12 @@ addEmployeeQuery = () => {
                         choices: this.roleName
 
                     }
-                ]).then(({updatedRole, updateEmployee }) => {
-
-                    
-
+                //destructure the answers to be used in the SQL Query
+                ]).then(({updateEmployee, updatedRole }) => {    
+                                      
                         db.query(`UPDATE employee 
-                            SET role_id = (?)
-                            WHERE (?) ;  
+                            SET role_id = ?
+                            WHERE id = ? ;  
                               `, [
                             this.roleName.indexOf(updatedRole) + 1,
                             this.employeeNames.indexOf(updateEmployee)
@@ -273,8 +299,76 @@ addEmployeeQuery = () => {
 
         
     }
+
+
+//Function that updates an employee's manager and passes it to the SQL database based on user input
+
+updateManagerQuery = () => {
+
+        return  inquirer.prompt([
+                    {
+                        type: "list",
+                        name: 'updateEmployee',
+                        message: "Which Employee would you like to update?",
+                        choices: this.employeeNames
+
+                    },
+                    {
+                        type: "list",
+                        name: 'updatedManager',
+                        message: "Who is their new Manager?",
+                        choices: this.employeeNames
+
+                    }
+
+                //destructure the answers to be used in the SQL Query
+                ]).then(({ updateEmployee, updatedManager }) => { 
+
+                         //Set a special case in case no manager is selected for the employee
+
+                         if (updatedManager === 'None') {
+
+                        db.query(`UPDATE employee 
+                            SET manager_id = ?
+                            WHERE id = ? ;  
+                              `, [
+                            null,
+                            this.employeeNames.indexOf(updateEmployee)
+                    
+                        ], (err) => {
+                            {
+                                if (err) {
+                                    console.log(err)
+                                } 
+                            }
+                        })
+
+                    } else {
+
+                        db.query(`UPDATE employee 
+                            SET manager_id = ?
+                            WHERE id = ? ;  
+                              `, [
+                            this.employeeNames.indexOf(updatedManager),
+                            this.employeeNames.indexOf(updateEmployee)
+                    
+                        ], (err) => {
+                            {
+                                if (err) {
+                                    console.log(err)
+                                } 
+                            }
+                        })
+                }
+            })
+        
+        }
+
+    
+    
+
 }
 
-
+//Export the Class to be used in index.js
 
 module.exports = new Options(db);

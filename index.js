@@ -1,15 +1,17 @@
-const inquirer = require('inquirer');
-const mysql = require('mysql2');
-const cTable = require('console.table');
-const Options = require('./functions')
 
-require('dotenv').config();
+//Necessary requirement method imports
+const inquirer = require('inquirer');
+const cTable = require('console.table');
+const Options = require('./functions');
+
+//The Main function containing the lead inquirer prompt 
 
 const Main = () => {
         inquirer.prompt([{
                 type: "list",
                 name: 'userChoice',
                 message: "What Would you Like to Do?",
+                //Choices set up as an array of objects, to be used later in a switch statment
                 choices: [
                     {
                         name: 'View All Departments',
@@ -36,13 +38,19 @@ const Main = () => {
                         value: 5,
                     },
                     {
-                         name: 'Update an Employee Role',
-                        value: 6
-                    } 
+                         name: "Update an Employee's Role",
+                         value: 6
+                    },
+                    {
+                         name: "Update an Employee's Manager",
+                         value: 7
+                    },
+                    
                 ]
             }
             ]).then(response => {
-            
+                
+                //pass the response into the switch statment and depending on the answer, running the appropriate function
                 let choice = response.userChoice 
                 switch (choice) {
                     case 0 :
@@ -66,11 +74,15 @@ const Main = () => {
                     case 6 : 
                         updateEmployee()
                         break;
-                
+                    case 7 :
+                        updateManager()
+                        break;
                 }
             })
 
 };
+
+//Calls the function from functions.js and then runs Main again to present the menu to the user
 
  const viewDepartment = () => {
 
@@ -81,6 +93,8 @@ const Main = () => {
 
 }
 
+//Calls the function from functions.js and then runs Main again to present the menu to the user
+
 const viewRoles = () => {
 
             Options.rolesQuery().then(() => {
@@ -90,12 +104,16 @@ const viewRoles = () => {
 
 }
 
+//Calls the function from functions.js and then runs Main again to present the menu to the user
+
 const viewEmployees = () => {
 
             Options.employeesQuery().then(() => {
                 Main();
             });
 }
+
+//Calls the function from functions.js and then runs Main again to present the menu to the user
 
 const addDepartment = () => {
 
@@ -105,6 +123,8 @@ const addDepartment = () => {
 
 }
 
+//Calls the function from functions.js and then runs Main again to present the menu to the user
+
 const addRole = () => {
 
             Options.addRoleQuery().then(() => {
@@ -113,22 +133,36 @@ const addRole = () => {
 
 }
 
+//Calls the function from functions.js and then runs Main again to present the menu to the user
+
 const addEmployee = () => {
 
-     Options.addEmployeeQuery().then(() => {
+            Options.addEmployeeQuery().then(() => {
                 Main();
             });
 }
+
+//Calls the function from functions.js and then runs Main again to present the menu to the user
 
 const updateEmployee = () => {
 
-    Options.updateEmployeeQuery().then(() => {
+            Options.updateEmployeeQuery().then(() => {
                 Main();
             });
 
 }
 
+//Calls the function from functions.js and then runs Main again to present the menu to the user
 
+const updateManager = () => {
+
+            Options.updateManagerQuery().then(() => {
+                Main();
+            });
+}
+
+
+//Cal the main function to start when node index is run
 Main();
 
 
