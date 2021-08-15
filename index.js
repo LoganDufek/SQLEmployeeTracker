@@ -1,111 +1,134 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 const cTable = require('console.table');
-const db = mysql.createConnection({
-    host: 'localhost',
-    // Your MySQL username,
-    user: 'root',
-    // Your MySQL password
-    password: 'KaguyaBestGirl1!',
-    database: 'employeeTracker'
-}, console.log('Connected to the election database.'));
+const Options = require('./functions')
 
-class SQLStart {
+require('dotenv').config();
 
-    constructor() {
-
-        this.answers = [];
-
-    }
-
-
-    promptUser() {
+const Main = () => {
         inquirer.prompt([{
                 type: "list",
                 name: 'userChoice',
                 message: "What Would you Like to Do?",
                 choices: [
-                    'View All Departments',
-                    'View All Roles',
-                    'View All Employees',
-                    'Add a Department',
-                    'Add a Role',
-                    'Add an Employee',
-                    'Update an Employee Role'
-                ]
-            },]).then(({userChoice}) => {
-            if (userChoice === 'View All Departments') {
-
-                db.query(`SELECT * FROM department;`, (err, results) => {
-                    if (err) {
-                        res.statusMessage(400).json({error: res.message});
-                    } else {
-                        console.table(results);
-
-                        this.promptUser();
-                    }
-                })
-            }
-            if (userChoice === 'View All Roles') {
-
-                    db.query(`SELECT roles.id, roles.title, roles.salary, department.department_name AS department
-                          FROM roles
-                          JOIN department ON department.id = roles.department_id;`, (err, results) => {
-                    if (err) {
-                        res.statusMessage(400).json({error: res.message});
-                    } else {
-                        console.table(results);
-
-                        this.promptUser();
-                    }
-                })
-            }
-            if (userChoice === 'View All Employees') {
-
-                    db.query(`SELECT 
-                              employee.first_name,  
-                              employee.last_name,
-                              roles.title,
-                              roles.salary,
-                              department.department_name AS department,
-                              employee.manager_id AS manager
-                          FROM employee
-                              JOIN roles ON employee.role_id = roles.id
-                              JOIN department ON roles.department_id = department.id
-                              LEFT JOIN employee first_name
-                              ON  employee.id = employee.manager_id;`, (err, results) => {
-                    if (err) {
-                        res.statusMessage(400).json({error: res.message});
-                    } else {
-                        console.table(results);
-
-                        this.promptUser();
-                    }
-                })
-            }
-
-            if (userChoice === 'Add a Department') {
-
-                    inquirer.prompt([{
-                type: "text",
-                name: 'departmentName',
-                message: "What Would You Like to name this Department?"
-                    }]).then(({departmentName}) => {
-                
-                    db.query(`INSERT INTO department (department_name)
-                              VALUES (?);`, departmentName, (err, results) => {
                     {
-                        console.table(results);
-
-                        this.promptUser();
-                    }
-                })
+                        name: 'View All Departments',
+                        value: 0,
+                    },
+                    {
+                        name: 'View All Roles',
+                        value: 1,
+                    },
+                    {
+                        name: 'View All Employees',
+                        value: 2,
+                    },
+                    {
+                        name: 'Add a Department',
+                        value: 3,
+                    },
+                    {
+                        name: 'Add a Role',
+                        value: 4,
+                    },
+                    {
+                        name: 'Add an Employee',
+                        value: 5,
+                    },
+                    {
+                         name: 'Update an Employee Role',
+                        value: 6
+                    } 
+                ]
             }
-                    )}
-        })
+            ]).then(response => {
+            
+                let choice = response.userChoice 
+                switch (choice) {
+                    case 0 :
+                        viewDepartment()
+                        break;
+                    case 1 :
+                        viewRoles()
+                        break;
+                    case 2 : 
+                        viewEmployees()
+                        break;
+                    case 3 : 
+                        addDepartment()
+                        break;
+                    case 4 : 
+                        addRole()
+                        break;
+                    case 5 :
+                        addEmployee()
+                        break;
+                    case 6 : 
+                        updateEmployee()
+                        break;
+                
+                }
+            })
 
-
-    }
 };
 
-new SQLStart().promptUser();
+ const viewDepartment = () => {
+
+            Options.departmentQuery().then(() => {
+                Main();
+            });
+                
+
+}
+
+const viewRoles = () => {
+
+            Options.rolesQuery().then(() => {
+                Main();
+            });
+                
+
+}
+
+const viewEmployees = () => {
+
+            Options.employeesQuery().then(() => {
+                Main();
+            });
+}
+
+const addDepartment = () => {
+
+            Options.addDepartmentQuery().then(() => {
+                Main();
+            });
+
+}
+
+const addRole = () => {
+
+            Options.addRoleQuery().then(() => {
+                Main();
+            });
+
+}
+
+const addEmployee = () => {
+
+     Options.addEmployeeQuery().then(() => {
+                Main();
+            });
+}
+
+const updateEmployee = () => {
+
+    Options.updateEmployeeQuery().then(() => {
+                Main();
+            });
+
+}
+
+
+Main();
+
+
